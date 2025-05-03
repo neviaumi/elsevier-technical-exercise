@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -54,6 +55,39 @@ class PeriodicTableRepository {
     this.objectStorage = objectStorage;
   }
 
+  public CompletableFuture<PeriodicTableEntity> getPeriodicTable() {
+    return this.objectStorage.getObject("elsevier-technical-exercise", "periodic_table.json")
+        .thenApply(resp -> {
+          ObjectMapper mapper = new ObjectMapper();
+          try {
+            List<Map<String, Object>> list = mapper.readValue(
+                resp.content(),
+                new TypeReference<>() {
+                }
+            );
+            return new PeriodicTableEntity(list, resp.etag());
+          } catch (Exception e) {
+            throw new JsonMappingException(
+                "Error on mapping the object on ObjectStorage to JSON : " + e.getMessage(), e);
+          }
+        });
+  }
+
+  public CompletableFuture<?> updatePeriodicTable(
+      PeriodicTableEntity periodicTableEntity) {
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      byte[] content = mapper.writeValueAsBytes(periodicTableEntity.data());
+      return this.objectStorage.replaceObject("elsevier-technical-exercise", "periodic_table.json",
+          content, periodicTableEntity.etag());
+    } catch (Exception e) {
+      throw new JsonMappingException(
+          "Error on mapping the object to JSON : " + e.getMessage(), e);
+    }
+
+
+  }
+
   /**
    * Finds all elements in the periodic table.
    *
@@ -61,14 +95,15 @@ class PeriodicTableRepository {
    */
   public CompletableFuture<List<ElementEntity>> findElements() {
     return this.objectStorage.getObject(
-        "elsevier-technical-exercise", "periodic_table.json")
+            "elsevier-technical-exercise", "periodic_table.json")
         .thenApply(resp -> {
           ObjectMapper mapper = new ObjectMapper();
           mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
           mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
           try {
             return mapper.readValue(
-                resp.content(), new TypeReference<List<ElementEntity>>() {});
+                resp.content(), new TypeReference<>() {
+                });
           } catch (Exception e) {
             throw new JsonMappingException(
                 "Error on mapping the object on ObjectStorage to JSON : " + e.getMessage(), e);

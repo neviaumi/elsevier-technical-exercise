@@ -3,8 +3,13 @@ package com.elsevier.technicalexercise.periodictable;
 import com.elsevier.technicalexercise.api.SuccessResponseDto;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -58,5 +63,16 @@ class ElementController {
     return this.periodicTableService.getElement(atomicNumber)
         .thenApply(ElementDetailDto::fromElement)
         .thenApply(SuccessResponseDto::fromSingleItem);
+  }
+
+  @PatchMapping("/elements")
+  @ResponseBody
+  public CompletableFuture<ResponseEntity<?>> updatePeriodicTable(
+      @RequestBody List<PatchElementDto> patchElements) {
+    return this.periodicTableService.updatePeriodicTable(patchElements).thenApply((resp) -> {
+      HttpHeaders headers = new HttpHeaders();
+      headers.add("ETag", resp.etag());
+      return new ResponseEntity<>(null, headers, HttpStatus.NO_CONTENT);
+    });
   }
 }
