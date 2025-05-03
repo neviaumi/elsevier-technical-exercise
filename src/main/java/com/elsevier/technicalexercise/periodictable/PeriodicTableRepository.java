@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,15 +37,6 @@ class PeriodicTableRepository {
   private static class InvalidGroupBlockException extends RuntimeException {
     public InvalidGroupBlockException(String message, Throwable cause) {
       super(message, cause);
-    }
-  }
-
-  /**
-   * Exception thrown when an element is not found.
-   */
-  private static class ElementNotFoundException extends RuntimeException {
-    public ElementNotFoundException(String message) {
-      super(message);
     }
   }
 
@@ -147,14 +139,12 @@ class PeriodicTableRepository {
    *
    * @param atomicNumber the atomic number of the element
    * @return a future that will complete with the element
-   * @throws ElementNotFoundException if the element is not found
    */
-  public CompletableFuture<ElementEntity> getElement(int atomicNumber) {
+  public CompletableFuture<Optional<ElementEntity>> getElement(int atomicNumber) {
     return this.findElements()
         .thenApply(elements -> elements.stream()
             .filter(element -> element.atomicNumber() == atomicNumber)
             .findFirst()
-            .orElseThrow(() -> new ElementNotFoundException(
-                "Element not found for atomic number: " + atomicNumber)));
+        );
   }
 }

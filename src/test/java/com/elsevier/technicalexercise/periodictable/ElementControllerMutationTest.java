@@ -209,18 +209,54 @@ public class ElementControllerMutationTest {
   @Test
   public void testPatchEmptyList() throws Exception {
     // When - send an empty list of elements to update
-    MvcResult mvcPatchResult =
-        mockMvc.perform(patch("/elements")
+    mockMvc.perform(patch("/elements")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsBytes(Collections.emptyList())))
-            .andExpect(request().asyncStarted())
-            .andReturn();
-
-    // Then - should still return 204 No Content
-    mockMvc.perform(asyncDispatch(mvcPatchResult))
-        .andExpect(status().isNoContent())
-        .andExpect(header().exists("ETag"));
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.error.code").value(400))
+            .andExpect(jsonPath("$.error.reason").value("HandlerMethodValidationException"))
+            .andExpect(jsonPath("$.error.message").exists());
   }
 
+  @Test
+  public void testPatchWithAllNullFields() throws Exception {
+    // When - send a list with an element that has all fields null except atomicNumber
+    mockMvc.perform(patch("/elements")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(List.of(
+                    new PatchElementDto(null, 1, null, null)
+                ))))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.error.code").value(400))
+            .andExpect(jsonPath("$.error.reason").value("PatchElementSizeException"))
+            .andExpect(jsonPath("$.error.message").value("PatchElementSizeException"));
+  }
 
+  @Test
+  public void testPatchWithNullAtomicNumber() throws Exception {
+    // When - send a list with an element that has a null atomicNumber
+    mockMvc.perform(patch("/elements")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("[{\"name\":\"Test Element\",\"atomicNumber\":null,\"alternativeName\":\"Te\",\"groupBlock\":\"test-block\"}]"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.error.code").value(400))
+            .andExpect(jsonPath("$.error.reason").value("HandlerMethodValidationException"))
+            .andExpect(jsonPath("$.error.message").exists());
+  }
+
+  @Test
+  public void testPatchWithNegativeAtomicNumber() throws Exception {
+    // When - send a list with an element that has a negative atomicNumber
+    mockMvc.perform(patch("/elements")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("[{\"name\":\"Test Element\",\"atomicNumber\":-1,\"alternativeName\":\"Te\",\"groupBlock\":\"test-block\"}]"))
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.error.code").value(400))
+            .andExpect(jsonPath("$.error.reason").value("HandlerMethodValidationException"))
+            .andExpect(jsonPath("$.error.message").exists());
+  }
 }

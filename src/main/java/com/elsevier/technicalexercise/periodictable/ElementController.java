@@ -1,17 +1,23 @@
 package com.elsevier.technicalexercise.periodictable;
 
+import com.elsevier.technicalexercise.api.ErrorResponseDto;
 import com.elsevier.technicalexercise.api.SuccessResponseDto;
+import com.elsevier.technicalexercise.utils.Validator;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -20,6 +26,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 class ElementController {
   private final PeriodicTableService periodicTableService;
+
+  public static class PatchElementSizeException extends RuntimeException {
+    public PatchElementSizeException(String s) {
+      super(s);
+    }
+  }
 
   /**
    * Constructs a new ElementController.
@@ -68,11 +80,40 @@ class ElementController {
   @PatchMapping("/elements")
   @ResponseBody
   public CompletableFuture<ResponseEntity<?>> updatePeriodicTable(
-      @RequestBody List<PatchElementDto> patchElements) {
-    return this.periodicTableService.updatePeriodicTable(patchElements).thenApply((resp) -> {
+      @RequestBody @Size(min = 1, message = "At least one element is required")
+      @Valid List<PatchElementDto> patchElements) {
+    List<PatchElementDto> validElements = patchElements.stream().filter((element) ->
+        Validator.isNotNullOrBlank(element.getGroupBlock())
+            || Validator.isNotNullOrBlank(element.getAlternativeName())
+            || Validator.isNotNullOrBlank(element.getName())).toList();
+    if (validElements.isEmpty()) {
+      throw new PatchElementSizeException(
+          "Validation failed, Element must minimum 1 field to update"
+      );
+    }
+    return this.periodicTableService.updatePeriodicTable(validElements).thenApply((resp) -> {
       HttpHeaders headers = new HttpHeaders();
       headers.add("ETag", resp.etag());
       return new ResponseEntity<>(null, headers, HttpStatus.NO_CONTENT);
     });
+  }
+
+  @ExceptionHandler(PatchElementSizeException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  public ErrorResponseDto handleValidationExceptions(PatchElementSizeException ex) {
+    return ErrorResponseDto.fromException(HttpStatus.BAD_REQUEST,
+        PatchElementSizeException.class.getSimpleName(),
+        ex);
+  }
+
+  @ExceptionHandler(PeriodicTableService.ElementNotFoundException.class)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  @ResponseBody
+  public ErrorResponseDto handleElementNotFoundException(
+      PeriodicTableService.ElementNotFoundException ex) {
+    return ErrorResponseDto.fromException(HttpStatus.NOT_FOUND,
+        PeriodicTableService.ElementNotFoundException.class.getSimpleName(),
+        ex);
   }
 }

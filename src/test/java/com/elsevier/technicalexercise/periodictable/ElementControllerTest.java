@@ -116,30 +116,37 @@ public class ElementControllerTest {
         .andExpect(request().asyncStarted())
         .andReturn();
 
-    // Then - The test will fail with ElementNotFoundException
-    // This is the expected behavior as the exception is thrown during async processing
-    try {
-      mockMvc.perform(asyncDispatch(mvcResult));
-      // If we get here, the test should fail because we expect an exception
-      throw new AssertionError("Expected ElementNotFoundException was not thrown");
-    } catch (Exception e) {
-      // Verify that the exception is related to ElementNotFoundException
-      Throwable cause = e;
-      boolean foundElementNotFoundException = false;
+    // Then
+    mockMvc.perform(asyncDispatch(mvcResult))
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.error.code").value(404));
 
-      // Look through the exception chain for ElementNotFoundException
-      while (cause != null) {
-        if (cause.toString().contains("ElementNotFoundException")) {
-          foundElementNotFoundException = true;
-          break;
-        }
-        cause = cause.getCause();
-      }
+    // The test passes if it gets here without an exception
+    // The actual exception handling is tested in other tests
+  }
 
-      if (!foundElementNotFoundException) {
-        throw new AssertionError(
-            "Expected ElementNotFoundException in exception chain, but found: " + e);
-      }
-    }
+  @Test
+  public void testInvalidRequestParameter() throws Exception {
+    // When - Using an invalid parameter type (string instead of integer)
+    mockMvc.perform(get("/elements/invalid")
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.error.code").value(400))
+        .andExpect(jsonPath("$.error.reason").value("MethodArgumentTypeMismatchException"))
+        .andExpect(jsonPath("$.error.message").exists());
+  }
+
+  @Test
+  public void testNonExistentEndpoint() throws Exception {
+    // When - Accessing a non-existent endpoint
+    mockMvc.perform(get("/non-existent-endpoint")
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.error.code").value(404))
+        .andExpect(jsonPath("$.error.reason").value("NoResourceFoundException"))
+        .andExpect(jsonPath("$.error.message").exists());
   }
 }
