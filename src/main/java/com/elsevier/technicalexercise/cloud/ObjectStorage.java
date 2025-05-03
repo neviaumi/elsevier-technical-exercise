@@ -1,7 +1,9 @@
 package com.elsevier.technicalexercise.cloud;
 
 import java.net.URI;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -9,6 +11,7 @@ import software.amazon.awssdk.core.async.AsyncRequestBody;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
+import software.amazon.awssdk.services.s3.S3AsyncClientBuilder;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -19,20 +22,26 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
  */
 @Component
 public class ObjectStorage {
-  private final String accessKey = "test";
-  private final String secretKey = "test";
   private S3AsyncClient s3Client;
 
   /**
    * Initializes the object storage client.
    */
-  public ObjectStorage() {
-    s3Client = S3AsyncClient.builder()
-        .region(Region.EU_WEST_2)
-        .endpointOverride(URI.create("http://127.0.0.1:4566"))
-        .credentialsProvider(StaticCredentialsProvider.create(
-            AwsBasicCredentials.create(accessKey, secretKey)))
-        .build();
+  public ObjectStorage(
+      @Value("${application.environment}") String appEnvironment,
+      @Value("${aws.s3.region}") String awsRegion,
+      @Value("${aws.s3.endpoint-override:#{null}}") String endpointOverride
+  ) {
+    System.out.println("Initializing ObjectStorage with appEnvironment: " + appEnvironment);
+    S3AsyncClientBuilder s3ClientBuilder = S3AsyncClient.builder();
+    if (List.of("test", "development").contains(appEnvironment)) {
+      s3ClientBuilder = s3ClientBuilder
+          .region(Region.of(awsRegion))
+          .endpointOverride(URI.create(endpointOverride))
+          .credentialsProvider(StaticCredentialsProvider.create(
+              AwsBasicCredentials.create("test", "test")));
+    }
+    s3Client = s3ClientBuilder.build();
   }
 
   /**
@@ -68,8 +77,8 @@ public class ObjectStorage {
   /**
    * Copies an object within a bucket.
    *
-   * @param bucketName the name of the bucket
-   * @param sourceKeyName the key of the source object
+   * @param bucketName         the name of the bucket
+   * @param sourceKeyName      the key of the source object
    * @param destinationKeyName the key for the destination object
    * @return a future that will complete when the copy operation is done
    */
@@ -86,9 +95,9 @@ public class ObjectStorage {
    * Replaces an object in the storage with new content.
    *
    * @param bucketName the name of the bucket
-   * @param keyName the key of the object to replace
-   * @param content the new content for the object
-   * @param etag the ETag of the object to ensure consistency
+   * @param keyName    the key of the object to replace
+   * @param content    the new content for the object
+   * @param etag       the ETag of the object to ensure consistency
    * @return a future that will complete when the replace operation is done
    */
   public CompletableFuture<?> replaceObject(String bucketName, String keyName, byte[] content,
@@ -105,7 +114,7 @@ public class ObjectStorage {
    * Deletes an object from the storage.
    *
    * @param bucketName the name of the bucket
-   * @param keyName the key of the object to delete
+   * @param keyName    the key of the object to delete
    * @return a future that will complete when the delete operation is done
    */
   public CompletableFuture<?> deleteObject(String bucketName, String keyName) {

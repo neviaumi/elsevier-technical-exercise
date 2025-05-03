@@ -2,7 +2,7 @@
 
 To start
 ```sh
-./mvnw spring-boot:run
+SPRING_PROFILES_ACTIVE=development ./mvnw spring-boot:run
 ```
 
 To test

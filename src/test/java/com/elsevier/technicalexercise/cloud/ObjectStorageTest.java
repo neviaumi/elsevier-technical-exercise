@@ -13,7 +13,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 class ObjectStorageTest {
 
-  private final ObjectStorage objectStorage = new ObjectStorage();
+  private final ObjectStorage objectStorage =
+      new ObjectStorage("test", "eu-west-2", "http://127.0.0.1:4566");
 
   private static final String BUCKET_NAME = "elsevier-technical-exercise";
   private static final String KEY_NAME = "periodic_table.json";
