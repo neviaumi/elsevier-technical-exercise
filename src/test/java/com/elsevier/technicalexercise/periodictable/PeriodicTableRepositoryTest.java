@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -391,13 +392,19 @@ class PeriodicTableRepositoryTest {
         .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
     // When
-    CompletableFuture<ElementEntity> futureElement = periodicTableRepository.getElement(1);
+    CompletableFuture<Optional<ElementEntity>> futureElement = periodicTableRepository.getElement(1);
 
     // Then
     assertNotNull(futureElement,
         "Future element should not be null");
 
-    ElementEntity element = futureElement.get();
+    Optional<ElementEntity> optionalElement = futureElement.get();
+    assertNotNull(optionalElement,
+        "Optional element should not be null");
+    assertTrue(optionalElement.isPresent(),
+        "Optional element should be present");
+
+    ElementEntity element = optionalElement.get();
     assertNotNull(element,
         "Element should not be null");
     assertEquals(1, element.atomicNumber(),
@@ -407,7 +414,7 @@ class PeriodicTableRepositoryTest {
   }
 
   @Test
-  void testGetElementByAtomicNumberNotFound() {
+  void testGetElementByAtomicNumberNotFound() throws ExecutionException, InterruptedException {
     // Given
     String jsonContent = """
         [
@@ -436,19 +443,17 @@ class PeriodicTableRepositoryTest {
         .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
     // When
-    CompletableFuture<ElementEntity> futureElement = periodicTableRepository.getElement(999);
+    CompletableFuture<Optional<ElementEntity>> futureElement = periodicTableRepository.getElement(999);
 
     // Then
     assertNotNull(futureElement,
         "Future element should not be null");
 
-    Exception exception = assertThrows(ExecutionException.class,
-        () -> {
-          futureElement.get();
-        });
-
-    assertTrue(exception.getCause().getMessage().contains("Element not found"),
-        "Should throw ElementNotFoundException with appropriate message");
+    Optional<ElementEntity> element = futureElement.get();
+    assertNotNull(element,
+        "Optional element should not be null");
+    assertTrue(element.isEmpty(),
+        "Optional element should be empty for non-existent atomic number");
   }
 
   @Test

@@ -1,5 +1,6 @@
 package com.elsevier.technicalexercise.periodictable;
 
+import com.elsevier.technicalexercise.utils.Validator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,12 @@ import org.springframework.stereotype.Service;
 @Service
 class PeriodicTableService {
   private final PeriodicTableRepository periodicTableRepository;
+
+  public static class ElementNotFoundException extends RuntimeException {
+    public ElementNotFoundException(String message) {
+      super(message);
+    }
+  }
 
   /**
    * Constructs a new PeriodicTableService.
@@ -50,7 +57,11 @@ class PeriodicTableService {
    * @return a future that will complete with the element
    */
   public CompletableFuture<ElementEntity> getElement(int atomicNumber) {
-    return periodicTableRepository.getElement(atomicNumber);
+    return periodicTableRepository.getElement(atomicNumber).thenApply(
+        elementEntity -> elementEntity.orElseThrow(
+            () -> new ElementNotFoundException(
+                "Element not found for atomic number: " + atomicNumber))
+    );
   }
 
   public CompletableFuture<PeriodicTableEntity> updatePeriodicTable(
@@ -61,7 +72,7 @@ class PeriodicTableService {
                 periodicTableEntity.data().stream().map(existingElement -> {
                   PatchElementDto newElementHaveToUpdate =
                       patchElements.stream().filter(newElement -> {
-                        return newElement.atomicNumber()
+                        return newElement.getAtomicNumber()
                             ==
                             Integer.parseInt(String.valueOf(existingElement.get("atomic_number")));
                       }).findFirst().orElse(null);
@@ -69,14 +80,15 @@ class PeriodicTableService {
                     return existingElement;
                   }
                   Map<String, Object> mergeElement = new HashMap<>(existingElement);
-                  if (newElementHaveToUpdate.name() != null) {
-                    mergeElement.put("name", newElementHaveToUpdate.name());
+                  if (Validator.isNotNullOrBlank(newElementHaveToUpdate.getName())) {
+                    mergeElement.put("name", newElementHaveToUpdate.getName());
                   }
-                  if (newElementHaveToUpdate.alternativeName() != null) {
-                    mergeElement.put("alternative_name", newElementHaveToUpdate.alternativeName());
+                  if (Validator.isNotNullOrBlank(newElementHaveToUpdate.getAlternativeName())) {
+                    mergeElement.put("alternative_name",
+                        newElementHaveToUpdate.getAlternativeName());
                   }
-                  if (newElementHaveToUpdate.groupBlock() != null) {
-                    mergeElement.put("group_block", newElementHaveToUpdate.groupBlock());
+                  if (Validator.isNotNullOrBlank(newElementHaveToUpdate.getGroupBlock())) {
+                    mergeElement.put("group_block", newElementHaveToUpdate.getGroupBlock());
                   }
                   return mergeElement;
                 }).toList(), periodicTableEntity.etag())
