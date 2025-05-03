@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 class PeriodicTableRepository {
+  private final String periodicTableBucket;
+  private final String periodicTableKeyPath;
   private final ObjectStorage objectStorage;
 
   /**
@@ -51,12 +54,17 @@ class PeriodicTableRepository {
    * @param objectStorage the object storage service
    */
   @Autowired
-  public PeriodicTableRepository(ObjectStorage objectStorage) {
+  public PeriodicTableRepository(ObjectStorage objectStorage,
+                                 @Value("${periodic-table.bucket}") String bucketName,
+                                 @Value("${periodic-table.key}") String objectKeyPath
+  ) {
     this.objectStorage = objectStorage;
+    this.periodicTableBucket = bucketName;
+    this.periodicTableKeyPath = objectKeyPath;
   }
 
   public CompletableFuture<PeriodicTableEntity> getPeriodicTable() {
-    return this.objectStorage.getObject("elsevier-technical-exercise", "periodic_table.json")
+    return this.objectStorage.getObject(this.periodicTableBucket, this.periodicTableKeyPath)
         .thenApply(resp -> {
           ObjectMapper mapper = new ObjectMapper();
           try {
@@ -78,7 +86,7 @@ class PeriodicTableRepository {
     ObjectMapper mapper = new ObjectMapper();
     try {
       byte[] content = mapper.writeValueAsBytes(periodicTableEntity.data());
-      return this.objectStorage.replaceObject("elsevier-technical-exercise", "periodic_table.json",
+      return this.objectStorage.replaceObject(this.periodicTableBucket, this.periodicTableKeyPath,
           content, periodicTableEntity.etag());
     } catch (Exception e) {
       throw new JsonMappingException(
@@ -95,7 +103,7 @@ class PeriodicTableRepository {
    */
   public CompletableFuture<List<ElementEntity>> findElements() {
     return this.objectStorage.getObject(
-            "elsevier-technical-exercise", "periodic_table.json")
+            this.periodicTableBucket, this.periodicTableKeyPath)
         .thenApply(resp -> {
           ObjectMapper mapper = new ObjectMapper();
           mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);

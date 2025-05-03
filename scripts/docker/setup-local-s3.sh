@@ -8,3 +8,5 @@ aws --endpoint-url http://localhost:4566 s3api put-bucket-versioning \
   --versioning-configuration Status=Enabled
 aws --endpoint-url http://localhost:4566 s3 cp \
   /tmp/periodic_table.json s3://elsevier-technical-exercise/periodic_table.json
+aws --endpoint-url http://localhost:4566 s3 cp \
+  /tmp/periodic_table.json s3://elsevier-technical-exercise/tests/periodic_table.json
