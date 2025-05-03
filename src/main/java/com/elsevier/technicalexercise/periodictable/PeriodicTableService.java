@@ -1,6 +1,8 @@
 package com.elsevier.technicalexercise.periodictable;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,5 +51,39 @@ class PeriodicTableService {
    */
   public CompletableFuture<ElementEntity> getElement(int atomicNumber) {
     return periodicTableRepository.getElement(atomicNumber);
+  }
+
+  public CompletableFuture<PeriodicTableEntity> updatePeriodicTable(
+      List<PatchElementDto> patchElements) {
+    return periodicTableRepository.getPeriodicTable()
+        .thenApply(
+            periodicTableEntity -> new PeriodicTableEntity(
+                periodicTableEntity.data().stream().map(existingElement -> {
+                  PatchElementDto newElementHaveToUpdate =
+                      patchElements.stream().filter(newElement -> {
+                        return newElement.atomicNumber()
+                            ==
+                            Integer.parseInt(String.valueOf(existingElement.get("atomic_number")));
+                      }).findFirst().orElse(null);
+                  if (newElementHaveToUpdate == null) {
+                    return existingElement;
+                  }
+                  Map<String, Object> mergeElement = new HashMap<>(existingElement);
+                  if (newElementHaveToUpdate.name() != null) {
+                    mergeElement.put("name", newElementHaveToUpdate.name());
+                  }
+                  if (newElementHaveToUpdate.alternativeName() != null) {
+                    mergeElement.put("alternative_name", newElementHaveToUpdate.alternativeName());
+                  }
+                  if (newElementHaveToUpdate.groupBlock() != null) {
+                    mergeElement.put("group_block", newElementHaveToUpdate.groupBlock());
+                  }
+                  return mergeElement;
+                }).toList(), periodicTableEntity.etag())
+        )
+        .thenCompose((periodicTableEntity) -> {
+          return periodicTableRepository.updatePeriodicTable(periodicTableEntity)
+              .thenApply((ignored) -> periodicTableEntity);
+        });
   }
 }

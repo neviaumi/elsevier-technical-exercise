@@ -442,4 +442,150 @@ class PeriodicTableRepositoryTest {
         assertTrue(exception.getCause().getMessage().contains("Element not found"),
                 "Should throw ElementNotFoundException with appropriate message");
     }
+    @Test
+    void testGetPeriodicTable() throws ExecutionException, InterruptedException {
+        // Given
+        String jsonContent = """
+            [
+                {
+                    "name": "Hydrogen",
+                    "atomic_number": 1,
+                    "alternative_name": "n/a",
+                    "group_block": "group 1, s-block"
+                },
+                {
+                    "name": "Helium",
+                    "atomic_number": 2,
+                    "alternative_name": "n/a",
+                    "group_block": "group 18 (noble gases), s-block"
+                }
+            ]
+            """;
+
+        ObjectStorage.GetObjectResponse mockResponse = new ObjectStorage.GetObjectResponse(
+                jsonContent.getBytes(StandardCharsets.UTF_8),
+                "mockETag"
+        );
+
+        when(objectStorage.getObject(eq("elsevier-technical-exercise"),
+                eq("periodic_table.json")))
+                .thenReturn(CompletableFuture.completedFuture(mockResponse));
+
+        // When
+        CompletableFuture<PeriodicTableEntity> futurePeriodicTable = periodicTableRepository.getPeriodicTable();
+
+        // Then
+        assertNotNull(futurePeriodicTable,
+                "Future periodic table should not be null");
+
+        PeriodicTableEntity periodicTable = futurePeriodicTable.get();
+        assertNotNull(periodicTable,
+                "Periodic table should not be null");
+        assertNotNull(periodicTable.data(),
+                "Periodic table data should not be null");
+        assertEquals("mockETag", periodicTable.etag(),
+                "Etag should match the mock response");
+        assertEquals(2, periodicTable.data().size(),
+                "Periodic table should contain 2 elements");
+
+        // Verify the data contains the expected elements
+        assertTrue(periodicTable.data().stream()
+                .anyMatch(element -> "Hydrogen".equals(element.get("name"))),
+                "Periodic table should contain Hydrogen");
+        assertTrue(periodicTable.data().stream()
+                .anyMatch(element -> "Helium".equals(element.get("name"))),
+                "Periodic table should contain Helium");
+    }
+
+    @Test
+    void testGetPeriodicTableWithEmptyResponse() throws ExecutionException, InterruptedException {
+        // Given
+        String jsonContent = "[]";
+
+        ObjectStorage.GetObjectResponse mockResponse = new ObjectStorage.GetObjectResponse(
+                jsonContent.getBytes(StandardCharsets.UTF_8),
+                "mockETag"
+        );
+
+        when(objectStorage.getObject(eq("elsevier-technical-exercise"),
+                eq("periodic_table.json")))
+                .thenReturn(CompletableFuture.completedFuture(mockResponse));
+
+        // When
+        CompletableFuture<PeriodicTableEntity> futurePeriodicTable = periodicTableRepository.getPeriodicTable();
+
+        // Then
+        assertNotNull(futurePeriodicTable,
+                "Future periodic table should not be null");
+
+        PeriodicTableEntity periodicTable = futurePeriodicTable.get();
+        assertNotNull(periodicTable,
+                "Periodic table should not be null");
+        assertNotNull(periodicTable.data(),
+                "Periodic table data should not be null");
+        assertEquals("mockETag", periodicTable.etag(),
+                "Etag should match the mock response");
+        assertTrue(periodicTable.data().isEmpty(),
+                "Periodic table data should be empty");
+    }
+
+    @Test
+    void testGetPeriodicTableWithInvalidJson() {
+        // Given
+        String invalidJson = "{ invalid json }";
+
+        ObjectStorage.GetObjectResponse mockResponse = new ObjectStorage.GetObjectResponse(
+                invalidJson.getBytes(StandardCharsets.UTF_8),
+                "mockETag"
+        );
+
+        when(objectStorage.getObject(eq("elsevier-technical-exercise"),
+                eq("periodic_table.json")))
+                .thenReturn(CompletableFuture.completedFuture(mockResponse));
+
+        // When
+        CompletableFuture<PeriodicTableEntity> futurePeriodicTable = periodicTableRepository.getPeriodicTable();
+
+        // Then
+        assertNotNull(futurePeriodicTable,
+                "Future periodic table should not be null");
+
+        Exception exception = assertThrows(ExecutionException.class,
+                () -> {
+                    futurePeriodicTable.get();
+                });
+
+        assertTrue(exception.getCause()
+                        .getMessage()
+                        .contains("Error on mapping the object"),
+                "Should throw an exception related to JSON mapping");
+    }
+
+    @Test
+    void testGetPeriodicTableWithObjectStorageFailure() {
+        // Given
+        CompletableFuture<ObjectStorage.GetObjectResponse> failedFuture = new CompletableFuture<>();
+        failedFuture.completeExceptionally(new RuntimeException("Storage error"));
+
+        when(objectStorage.getObject(anyString(),
+                anyString()))
+                .thenReturn(failedFuture);
+
+        // When
+        CompletableFuture<PeriodicTableEntity> futurePeriodicTable = periodicTableRepository.getPeriodicTable();
+
+        // Then
+        assertNotNull(futurePeriodicTable,
+                "Future periodic table should not be null");
+
+        Exception exception = assertThrows(ExecutionException.class,
+                () -> {
+                    futurePeriodicTable.get();
+                });
+
+        assertEquals("Storage error",
+                exception.getCause()
+                        .getMessage(),
+                "Should propagate the original error message");
+    }
 }
