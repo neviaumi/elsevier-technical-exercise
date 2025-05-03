@@ -35,7 +35,7 @@ class ObjectStorageTest {
                 "Content should not be null");
         assertTrue(response.content().length > 0,
                 "Content should not be empty");
-        assertNotNull(response.eTag(),
+        assertNotNull(response.etag(),
                 "ETag should not be null");
 
         // Convert content to string and verify it contains expected data

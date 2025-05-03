@@ -102,9 +102,9 @@ public class ElementControllerTest {
         mockMvc.perform(asyncDispatch(mvcResult))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.data.data.name").value("Hydrogen"))
-                .andExpect(jsonPath("$.data.data.atomicNumber").value(1))
-                .andExpect(jsonPath("$.data.data.alternativeName").exists());
+                .andExpect(jsonPath("$.data.name").value("Hydrogen"))
+                .andExpect(jsonPath("$.data.atomicNumber").value(1))
+                .andExpect(jsonPath("$.data.alternativeName").exists());
     }
 
     @Test

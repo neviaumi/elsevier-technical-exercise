@@ -1,6 +1,7 @@
 package com.elsevier.technicalexercise.periodictable;
 
-import com.elsevier.technicalexercise.api.SuccessResponseDTO;
+import com.elsevier.technicalexercise.api.SuccessResponseDto;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,15 +33,15 @@ class ElementController {
    */
   @GetMapping("/elements")
   @ResponseBody
-  public CompletableFuture<SuccessResponseDTO> findElements(
+  public CompletableFuture<SuccessResponseDto<SuccessResponseDto.Items<ElementDto>>> findElements(
       @RequestParam(required = false) String group) {
-    CompletableFuture<java.util.List<ElementEntity>> elementsFuture = group != null 
-        ? this.periodicTableService.findElements(group) 
+    CompletableFuture<List<ElementEntity>> elementsFuture = group != null
+        ? this.periodicTableService.findElements(group)
         : this.periodicTableService.findElements();
 
-    return elementsFuture.thenApply(resp -> SuccessResponseDTO.fromListOfItems(
+    return elementsFuture.thenApply(resp -> SuccessResponseDto.fromListOfItems(
         resp.stream()
-            .map(ElementDTO::fromElement)
+            .map(ElementDto::fromElement)
             .toList()));
   }
 
@@ -52,9 +53,10 @@ class ElementController {
    */
   @GetMapping("/elements/{atomicNumber}")
   @ResponseBody
-  public CompletableFuture<SuccessResponseDTO> getElement(@PathVariable int atomicNumber) {
+  public CompletableFuture<SuccessResponseDto<ElementDetailDto>> getElement(
+      @PathVariable int atomicNumber) {
     return this.periodicTableService.getElement(atomicNumber)
-        .thenApply(ElementDetailDTO::fromElement)
-        .thenApply(SuccessResponseDTO::fromSingleItem);
+        .thenApply(ElementDetailDto::fromElement)
+        .thenApply(SuccessResponseDto::fromSingleItem);
   }
 }
