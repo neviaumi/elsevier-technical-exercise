@@ -8,7 +8,7 @@ SPRING_PROFILES_ACTIVE=development ./mvnw spring-boot:run
 
 ## To test
 ```sh
-sh ./scripts/test.sh
+sh ./scripts/ci/test.sh
 ```
 
 ## To check style
