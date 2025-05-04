@@ -1,0 +1,10 @@
+services:
+  app:
+    extends:
+      file: docker-compose.app.yml
+      service: app
+    build:
+      target: base
+    command: ./scripts/docker/test.sh
+    environment:
+      AWS_S3_ENDPOINT_OVERRIDE: http://localstack:4566

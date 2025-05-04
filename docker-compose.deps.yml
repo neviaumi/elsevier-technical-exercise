@@ -1,0 +1,16 @@
+services:
+  localstack:
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=eu-west-2
+      - GATEWAY_LISTEN=0.0.0.0
+    image: localstack/localstack:4.3.0
+    volumes:
+      - source: ./scripts/docker/setup-local-s3.sh
+        target: /etc/localstack/init/ready.d/setup-local-s3.sh
+        type: bind
+      - source: ./periodic_table.json
+        target: /tmp/periodic_table.json
+        read_only: true
+        type: bind

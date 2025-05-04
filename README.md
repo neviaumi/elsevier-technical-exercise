@@ -2,12 +2,13 @@
 
 ## To start
 ```sh
+docker compose up -d
 SPRING_PROFILES_ACTIVE=development ./mvnw spring-boot:run
 ```
 
 ## To test
 ```sh
-./mvnw test
+sh ./scripts/test.sh
 ```
 
 ## To check style

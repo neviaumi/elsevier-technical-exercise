@@ -12,6 +12,7 @@ import software.amazon.awssdk.core.async.AsyncResponseTransformer;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3AsyncClientBuilder;
+import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -29,17 +30,17 @@ public class ObjectStorage {
    */
   public ObjectStorage(
       @Value("${application.environment}") String appEnvironment,
-      @Value("${aws.s3.region}") String awsRegion,
+      @Value("${aws.region}") String awsRegion,
       @Value("${aws.s3.endpoint-override:#{null}}") String endpointOverride
   ) {
-    System.out.println("Initializing ObjectStorage with appEnvironment: " + appEnvironment);
-    S3AsyncClientBuilder s3ClientBuilder = S3AsyncClient.builder();
+    S3AsyncClientBuilder s3ClientBuilder = S3AsyncClient.builder().region(Region.of(awsRegion));
     if (List.of("test", "development").contains(appEnvironment)) {
       s3ClientBuilder = s3ClientBuilder
-          .region(Region.of(awsRegion))
           .endpointOverride(URI.create(endpointOverride))
           .credentialsProvider(StaticCredentialsProvider.create(
-              AwsBasicCredentials.create("test", "test")));
+              AwsBasicCredentials.create("test", "test")))
+          .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build());
+      ;
     }
     s3Client = s3ClientBuilder.build();
   }
