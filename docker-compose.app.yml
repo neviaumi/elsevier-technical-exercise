@@ -1,0 +1,9 @@
+services:
+  app:
+    depends_on:
+      - localstack
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command: ./scripts/docker/start.sh
+    entrypoint: /bin/sh

@@ -7,17 +7,22 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class ObjectStorageTest {
 
-  private final ObjectStorage objectStorage =
-      new ObjectStorage("test", "eu-west-2", "http://127.0.0.1:4566");
+  @Autowired
+  private ObjectStorage objectStorage;
 
-  private static final String BUCKET_NAME = "elsevier-technical-exercise";
-  private static final String KEY_NAME = "periodic_table.json";
+  @Value("${periodic-table.bucket}")
+  private  String BUCKET_NAME;
+  @Value("${periodic-table.key}")
+  private  String KEY_NAME;
 
   @Test
   void testGetObject() throws ExecutionException, InterruptedException {

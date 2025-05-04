@@ -21,7 +21,7 @@
 	</dependencyManagement>
 	<groupId>com.elsevier</groupId>
 	<artifactId>technicalexercise</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>latest</version>
 	<name>technical-exercise</name>
 	<description>Elsevier Software Engineer technical exercise</description>
 	<url/>
