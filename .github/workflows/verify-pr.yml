@@ -1,0 +1,21 @@
+env:
+  CI: true
+jobs:
+  test:
+    environment: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{github.head_ref}}
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version-file: .java-version
+          distribution: 'liberica'
+      - run: bash ./scripts/ci/test.sh
+name: Verify PR
+
+on:
+  - pull_request
+  - workflow_dispatch
