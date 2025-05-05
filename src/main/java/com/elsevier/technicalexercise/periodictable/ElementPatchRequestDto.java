@@ -80,8 +80,8 @@ public class ElementPatchRequestDto {
 
   @Schema(hidden = true)
   public boolean isEmpty() {
-    return Validator.isNotNullOrBlank(this.name)
-        && Validator.isNotNullOrBlank(this.alternativeName)
-        && Validator.isNotNullOrBlank(this.groupBlock);
+    return Validator.isNullOrBlank(this.name)
+        && Validator.isNullOrBlank(this.alternativeName)
+        && Validator.isNullOrBlank(this.groupBlock);
   }
 }
