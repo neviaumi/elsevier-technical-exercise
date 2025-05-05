@@ -8,61 +8,100 @@ import org.springframework.http.HttpStatus;
 /**
  * Standard error response DTO for API errors.
  */
-public record ErrorResponseDto(Map<String, Object> error) {
+public record ErrorResponseDto(Error error) {
   /**
-   * Nested record representing a specific error with reason and message.
+   * Represents the error details in the API response.
    *
-   * @param reason The error reason or type
-   * @param message The detailed error message
+   * @param code HTTP status code
+   * @param message Error message
+   * @param reason Error reason
+   * @param errors List of detailed error information
    */
-  public record Error(String reason, String message) {
+  public record Error(int code, String message, String reason, List<ErrorDetail> errors) {
   }
+
+  /**
+   * Represents detailed information about a specific error.
+   *
+   * @param reason The reason for the error
+   * @param message The error message
+   * @param location The location where the error occurred (can be null)
+   * @param locationType The type of location (can be null)
+   */
+  public record ErrorDetail(String reason, String message, String location, String locationType) {
+    static ErrorDetail fromException(Exception ex) {
+      return fromException(ex, ex.getMessage());
+    }
+
+    static ErrorDetail fromException(String reason, String message) {
+      return new ErrorDetail(reason, message, null, null);
+    }
+
+    static ErrorDetail fromException(Exception ex, String message) {
+      return fromException(
+          ex.getClass().getSimpleName(),
+          message
+      );
+    }
+  }
+
 
   /**
    * Creates an error response from an exception.
    *
-   * @param status The HTTP status code
-   * @param message The error message
+   * @param status The HTTP status code to use in the response
    * @param ex The exception that caused the error
-   * @return A new ErrorResponseDto with information from the exception
+   * @return A new ErrorResponseDto containing the exception details
    */
-  public static ErrorResponseDto fromException(HttpStatus status, String message, Exception ex) {
-    Map<String, Object> data = new HashMap<>();
-    data.put("code", status.value());
-    data.put("message", message);
-    data.put("reason", ex.getClass().getSimpleName());
-    data.put("errors", List.of(new Error(ex.getClass().getSimpleName(), ex.getMessage())));
-    return new ErrorResponseDto(data);
+  public static ErrorResponseDto fromException(HttpStatus status, Exception ex) {
+    return new ErrorResponseDto(
+        new Error(status.value(),
+            ex.getMessage(),
+            ex.getClass().getSimpleName(),
+            List.of(new ErrorDetail(ex.getClass().getSimpleName(), ex.getMessage(), null, null))
+        )
+    );
   }
 
   /**
-   * Creates an error response from a list of errors, using the first error's reason.
+   * Creates an error response from a list of error details.
    *
-   * @param status The HTTP status code
-   * @param message The error message
-   * @param errors The list of errors
-   * @return A new ErrorResponseDto with information from the errors
+   * @param status The HTTP status code to use in the response
+   * @param errors The list of error details
+   * @return A new ErrorResponseDto containing the error details
    */
-  public static ErrorResponseDto fromErrors(HttpStatus status, String message, List<Error> errors) {
+  public static ErrorResponseDto fromErrors(HttpStatus status, List<ErrorDetail> errors) {
+    ErrorDetail firstError = errors.getFirst();
+    return fromErrors(status, firstError.reason(), firstError.message(), errors);
+  }
+
+
+  /**
+   * Creates an error response with a custom message from a list of error details.
+   *
+   * @param status The HTTP status code to use in the response
+   * @param message The custom error message
+   * @param errors The list of error details
+   * @return A new ErrorResponseDto containing the error details with the custom message
+   */
+  public static ErrorResponseDto fromErrors(HttpStatus status, String message,
+                                            List<ErrorDetail> errors) {
     return fromErrors(status, errors.getFirst().reason(), message, errors);
   }
 
   /**
-   * Creates an error response from a list of errors with a specified reason.
+   * Creates an error response with custom reason and message from a list of error details.
    *
-   * @param status The HTTP status code
-   * @param reason The error reason
-   * @param message The error message
-   * @param errors The list of errors
-   * @return A new ErrorResponseDto with the provided information
+   * @param status The HTTP status code to use in the response
+   * @param reason The custom error reason
+   * @param message The custom error message
+   * @param errors The list of error details
+   * @return A new ErrorResponseDto containing the error details with custom reason and message
    */
   public static ErrorResponseDto fromErrors(HttpStatus status, String reason, String message,
-                                            List<Error> errors) {
-    Map<String, Object> data = new HashMap<>();
-    data.put("code", status.value());
-    data.put("message", message);
-    data.put("reason", reason);
-    data.put("errors", errors);
-    return new ErrorResponseDto(data);
+                                            List<ErrorDetail> errors) {
+    return new ErrorResponseDto(new Error(status.value(),
+        message,
+        reason, errors));
   }
 }

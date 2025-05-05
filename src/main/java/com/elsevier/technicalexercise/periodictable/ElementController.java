@@ -2,10 +2,12 @@ package com.elsevier.technicalexercise.periodictable;
 
 import com.elsevier.technicalexercise.api.ErrorResponseDto;
 import com.elsevier.technicalexercise.api.SuccessResponseDto;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +46,7 @@ class ElementController {
   @GetMapping("/elements")
   @ResponseBody
   public CompletableFuture<SuccessResponseDto<SuccessResponseDto.Items<ElementDto>>> findElements(
+      @ParameterObject
       @Valid @ModelAttribute
       ElementListingRequestDto elementListingRequestDto) {
 
@@ -94,7 +97,6 @@ class ElementController {
   @ResponseBody
   public ErrorResponseDto handleValidationExceptions(PatchElementSizeException ex) {
     return ErrorResponseDto.fromException(HttpStatus.BAD_REQUEST,
-        PatchElementSizeException.class.getSimpleName(),
         ex);
   }
 
@@ -104,7 +106,6 @@ class ElementController {
   public ErrorResponseDto handleElementNotFoundException(
       PeriodicTableService.ElementNotFoundException ex) {
     return ErrorResponseDto.fromException(HttpStatus.NOT_FOUND,
-        PeriodicTableService.ElementNotFoundException.class.getSimpleName(),
         ex);
   }
 }

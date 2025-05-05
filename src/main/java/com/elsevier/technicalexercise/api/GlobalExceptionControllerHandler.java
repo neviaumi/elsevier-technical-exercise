@@ -34,7 +34,6 @@ public class GlobalExceptionControllerHandler {
   public ResponseEntity<ErrorResponseDto> handleErrorResponseException(ErrorResponseException ex) {
     return new ResponseEntity<>(ErrorResponseDto.fromException(
         HttpStatus.valueOf(ex.getStatusCode().value()),
-        ex.getMessage(),
         ex
     ), ex.getStatusCode());
   }
@@ -49,22 +48,22 @@ public class GlobalExceptionControllerHandler {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
   public ErrorResponseDto handleHandlerMethodValidationException(HandlerMethodValidationException
-                                                         ex) {
+                                                                     ex) {
     return ErrorResponseDto.fromErrors(HttpStatus.BAD_REQUEST,
         HandlerMethodValidationException.class.getSimpleName(),
         "Validation failed for the input fields. Please check the data format and try again.",
         ex.getAllErrors().stream()
             .map(error -> {
               if (error instanceof FieldError fieldError) {
-                return new ErrorResponseDto.Error(
+                return new ErrorResponseDto.ErrorDetail(
+                    fieldError.getClass().getSimpleName(),
+                    fieldError.getDefaultMessage(),
                     fieldError.getField(),
-                    fieldError.getDefaultMessage()
-              );
+                    "field"
+                );
               }
-              return new ErrorResponseDto.Error(
-                  error.getClass().getSimpleName(),
-                  error.getDefaultMessage()
-              );
+              return ErrorResponseDto.ErrorDetail.fromException(error.getClass().getSimpleName(),
+                  error.getDefaultMessage());
             })
             .toList());
   }
@@ -84,9 +83,12 @@ public class GlobalExceptionControllerHandler {
         MethodArgumentNotValidException.class.getSimpleName(),
         "Validation failed for the input fields. Please check the data format and try again.",
         ex.getBindingResult().getFieldErrors().stream()
-            .map(error -> new ErrorResponseDto.Error(
-                error.getField(),
-                error.getDefaultMessage())
+            .map(error -> new ErrorResponseDto.ErrorDetail(
+                    error.getClass().getSimpleName(),
+                    error.getDefaultMessage(),
+                    error.getField(),
+                    "field"
+                )
             )
             .toList());
   }
@@ -110,7 +112,7 @@ public class GlobalExceptionControllerHandler {
     return ErrorResponseDto.fromErrors(
         HttpStatus.BAD_REQUEST,
         message,
-        List.of(new ErrorResponseDto.Error(ex.getClass().getSimpleName(), message))
+        List.of(ErrorResponseDto.ErrorDetail.fromException(ex, message))
     );
   }
 
@@ -138,7 +140,7 @@ public class GlobalExceptionControllerHandler {
     return ErrorResponseDto.fromErrors(
         HttpStatus.BAD_REQUEST,
         message,
-        List.of(new ErrorResponseDto.Error(ex.getClass().getSimpleName(), message))
+        List.of(ErrorResponseDto.ErrorDetail.fromException(ex.getClass().getSimpleName(), message))
     );
   }
 
@@ -158,7 +160,6 @@ public class GlobalExceptionControllerHandler {
 
     return ErrorResponseDto.fromException(
         HttpStatus.INTERNAL_SERVER_ERROR,
-        ex.getMessage(),
         ex
     );
   }
@@ -177,7 +178,6 @@ public class GlobalExceptionControllerHandler {
                                                          WebRequest request) {
     return ErrorResponseDto.fromException(
         HttpStatus.NOT_FOUND,
-        ex.getMessage(),
         ex
     );
   }

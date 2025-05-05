@@ -15,6 +15,9 @@ public class ElementPatchRequestDto {
 
   @NotNull(message = "Atomic number must not be null")
   @Positive(message = "Atomic number must be a positive integer")
+  @Schema(description = "Atomic number",
+      example = "3"
+  )
   private Integer atomicNumber;
 
   private String alternativeName;
