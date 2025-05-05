@@ -4,6 +4,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.ErrorResponseException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -36,6 +38,37 @@ public class GlobalExceptionControllerHandler {
         ex
     ), ex.getStatusCode());
   }
+
+  /**
+   * Handles validation exceptions for handler methods.
+   *
+   * @param ex The HandlerMethodValidationException to handle
+   * @return ErrorResponseDto containing validation error details
+   */
+  @ExceptionHandler(HandlerMethodValidationException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  public ErrorResponseDto handleHandlerMethodValidationException(HandlerMethodValidationException
+                                                         ex) {
+    return ErrorResponseDto.fromErrors(HttpStatus.BAD_REQUEST,
+        HandlerMethodValidationException.class.getSimpleName(),
+        "Validation failed for the input fields. Please check the data format and try again.",
+        ex.getAllErrors().stream()
+            .map(error -> {
+              if (error instanceof FieldError fieldError) {
+                return new ErrorResponseDto.Error(
+                    fieldError.getField(),
+                    fieldError.getDefaultMessage()
+              );
+              }
+              return new ErrorResponseDto.Error(
+                  error.getClass().getSimpleName(),
+                  error.getDefaultMessage()
+              );
+            })
+            .toList());
+  }
+
 
   /**
    * Handles validation exceptions for method arguments.
