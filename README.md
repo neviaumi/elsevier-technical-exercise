@@ -102,7 +102,7 @@ sh ./scripts/ci/test.sh
 **To view API documentation (Swagger UI):**
 
 - Start the server as described above
-- Open [http://localhost:8080/v1/swagger-ui](http://localhost:8080/v1/swagger-ui) in your browser
+- Open [http://localhost:8080/v1/swagger-ui.html](http://localhost:8080/v1/swagger-ui.html) in your browser
 
 ### Testing Guide
 
