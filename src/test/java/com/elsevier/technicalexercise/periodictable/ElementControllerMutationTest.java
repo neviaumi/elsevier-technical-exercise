@@ -229,7 +229,7 @@ public class ElementControllerMutationTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.error.code").value(400))
             .andExpect(jsonPath("$.error.reason").value("PatchElementSizeException"))
-            .andExpect(jsonPath("$.error.message").value("PatchElementSizeException"));
+            .andExpect(jsonPath("$.error.message").value("Validation failed, Element must minimum 1 field to update"));
   }
 
   @Test

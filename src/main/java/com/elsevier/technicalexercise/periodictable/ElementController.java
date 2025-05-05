@@ -97,7 +97,6 @@ class ElementController {
   @ResponseBody
   public ErrorResponseDto handleValidationExceptions(PatchElementSizeException ex) {
     return ErrorResponseDto.fromException(HttpStatus.BAD_REQUEST,
-        PatchElementSizeException.class.getSimpleName(),
         ex);
   }
 
@@ -107,7 +106,6 @@ class ElementController {
   public ErrorResponseDto handleElementNotFoundException(
       PeriodicTableService.ElementNotFoundException ex) {
     return ErrorResponseDto.fromException(HttpStatus.NOT_FOUND,
-        PeriodicTableService.ElementNotFoundException.class.getSimpleName(),
         ex);
   }
 }
