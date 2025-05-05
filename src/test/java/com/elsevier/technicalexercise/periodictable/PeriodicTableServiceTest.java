@@ -58,8 +58,8 @@ class PeriodicTableServiceTest {
         .thenReturn(CompletableFuture.completedFuture(null));
 
     // Create patch elements
-    List<PatchElementDto> patchElements = new ArrayList<>();
-    patchElements.add(new PatchElementDto("Updated Hydrogen", 1, "H", "updated group 1, s-block"));
+    List<ElementPatchRequestDto> patchElements = new ArrayList<>();
+    patchElements.add(new ElementPatchRequestDto("Updated Hydrogen", 1, "H", "updated group 1, s-block"));
 
     // When
     CompletableFuture<PeriodicTableEntity> result =
@@ -102,8 +102,8 @@ class PeriodicTableServiceTest {
         .thenReturn(CompletableFuture.failedFuture(expectedException));
 
     // Create patch elements
-    List<PatchElementDto> patchElements = new ArrayList<>();
-    patchElements.add(new PatchElementDto("Updated Hydrogen", 1, "H", "updated group 1, s-block"));
+    List<ElementPatchRequestDto> patchElements = new ArrayList<>();
+    patchElements.add(new ElementPatchRequestDto("Updated Hydrogen", 1, "H", "updated group 1, s-block"));
 
     // When
     CompletableFuture<PeriodicTableEntity> result = 
@@ -146,8 +146,8 @@ class PeriodicTableServiceTest {
         .thenReturn(CompletableFuture.failedFuture(expectedException));
 
     // Create patch elements
-    List<PatchElementDto> patchElements = new ArrayList<>();
-    patchElements.add(new PatchElementDto("Updated Hydrogen", 1, "H", "updated group 1, s-block"));
+    List<ElementPatchRequestDto> patchElements = new ArrayList<>();
+    patchElements.add(new ElementPatchRequestDto("Updated Hydrogen", 1, "H", "updated group 1, s-block"));
 
     // When
     CompletableFuture<PeriodicTableEntity> result = 

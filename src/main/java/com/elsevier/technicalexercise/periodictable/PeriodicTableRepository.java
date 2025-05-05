@@ -124,8 +124,7 @@ class PeriodicTableRepository {
               try {
                 String[] groups = element.groupBlock().split(",");
                 String groupBlockNumber = groups[0].strip().split(" ")[1];
-                String groupBlock = groups[1].strip();
-                return groupBlockNumber.equals(group) || groupBlock.equals(group);
+                return groupBlockNumber.equals(group);
               } catch (Exception e) {
                 throw new InvalidGroupBlockException(
                     "Invalid group block : " + e.getMessage(), e);

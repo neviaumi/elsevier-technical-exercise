@@ -2,7 +2,6 @@ package com.elsevier.technicalexercise.periodictable;
 
 import com.elsevier.technicalexercise.api.ErrorResponseDto;
 import com.elsevier.technicalexercise.api.SuccessResponseDto;
-import com.elsevier.technicalexercise.utils.Validator;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import java.util.List;
@@ -12,10 +11,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,24 +41,17 @@ class ElementController {
     this.periodicTableService = periodicTableService;
   }
 
-  /**
-   * Finds elements, optionally filtered by group.
-   *
-   * @param group the group to filter by (optional)
-   * @return a future that will complete with the response containing the elements
-   */
   @GetMapping("/elements")
   @ResponseBody
   public CompletableFuture<SuccessResponseDto<SuccessResponseDto.Items<ElementDto>>> findElements(
-      @RequestParam(required = false) String group) {
-    CompletableFuture<List<ElementEntity>> elementsFuture = group != null
-        ? this.periodicTableService.findElements(group)
-        : this.periodicTableService.findElements();
+      @Valid @ModelAttribute
+      ElementListingRequestDto elementListingRequestDto) {
 
-    return elementsFuture.thenApply(resp -> SuccessResponseDto.fromListOfItems(
-        resp.stream()
-            .map(ElementDto::fromElement)
-            .toList()));
+    return this.periodicTableService.findElements(elementListingRequestDto)
+        .thenApply(resp -> SuccessResponseDto.fromListOfItems(
+            resp.stream()
+                .map(ElementDto::fromElement)
+                .toList()));
   }
 
   /**
@@ -81,11 +73,10 @@ class ElementController {
   @ResponseBody
   public CompletableFuture<ResponseEntity<?>> updatePeriodicTable(
       @RequestBody @Size(min = 1, message = "At least one element is required")
-      @Valid List<PatchElementDto> patchElements) {
-    List<PatchElementDto> validElements = patchElements.stream().filter((element) ->
-        Validator.isNotNullOrBlank(element.getGroupBlock())
-            || Validator.isNotNullOrBlank(element.getAlternativeName())
-            || Validator.isNotNullOrBlank(element.getName())).toList();
+      @Valid List<ElementPatchRequestDto> patchElements) {
+    List<ElementPatchRequestDto> validElements = patchElements.stream().filter(
+        (element) -> !element.isEmpty()
+    ).toList();
     if (validElements.isEmpty()) {
       throw new PatchElementSizeException(
           "Validation failed, Element must minimum 1 field to update"

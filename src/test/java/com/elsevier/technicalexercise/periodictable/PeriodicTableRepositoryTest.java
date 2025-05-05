@@ -257,112 +257,6 @@ class PeriodicTableRepositoryTest {
   }
 
   @Test
-  void testFindElementsByBlockType() throws ExecutionException, InterruptedException {
-    // Given
-    String jsonContent = """
-        [
-            {
-                "name": "Hydrogen",
-                "atomic_number": 1,
-                "alternative_name": "n/a",
-                "group_block": "group 1, s-block"
-            },
-            {
-                "name": "Helium",
-                "atomic_number": 2,
-                "alternative_name": "n/a",
-                "group_block": "group 18 (noble gases), s-block"
-            },
-            {
-                "name": "Boron",
-                "atomic_number": 5,
-                "alternative_name": "n/a",
-                "group_block": "group 13, p-block"
-            }
-        ]
-        """;
-
-    ObjectStorage.GetObjectResponse mockResponse = new ObjectStorage.GetObjectResponse(
-        jsonContent.getBytes(StandardCharsets.UTF_8),
-        "mockETag"
-    );
-
-    when(objectStorage.getObject(eq(testBucketName),
-        eq(testObjectKeyPath)))
-        .thenReturn(CompletableFuture.completedFuture(mockResponse));
-
-    // When
-    CompletableFuture<List<ElementEntity>> futureElements =
-        periodicTableRepository.findElements("s-block");
-
-    // Then
-    assertNotNull(futureElements,
-        "Future elements should not be null");
-
-    List<ElementEntity> elements = futureElements.get();
-    assertNotNull(elements,
-        "Elements list should not be null");
-    assertEquals(2, elements.size(),
-        "Should have 2 elements in s-block");
-
-    // Verify that only elements from s-block are returned
-    for (ElementEntity element : elements) {
-      assertTrue(element.groupBlock().contains("s-block"),
-          "Element should be in s-block");
-    }
-
-    // Verify specific elements
-    assertTrue(elements.stream().anyMatch(e -> e.name().equals("Hydrogen")),
-        "Hydrogen should be in the result");
-    assertTrue(elements.stream().anyMatch(e -> e.name().equals("Helium")),
-        "Helium should be in the result");
-    assertFalse(elements.stream().anyMatch(e -> e.name().equals("Boron")),
-        "Boron should not be in the result");
-  }
-
-  @Test
-  void testFindElementsByGroupWithInvalidGroupBlock() {
-    // Given
-    String jsonContent = """
-        [
-            {
-                "name": "InvalidElement",
-                "atomic_number": 999,
-                "alternative_name": "n/a",
-                "group_block": "invalid format"
-            }
-        ]
-        """;
-
-    ObjectStorage.GetObjectResponse mockResponse = new ObjectStorage.GetObjectResponse(
-        jsonContent.getBytes(StandardCharsets.UTF_8),
-        "mockETag"
-    );
-
-    when(objectStorage.getObject(eq(testBucketName),
-        eq(testObjectKeyPath)))
-        .thenReturn(CompletableFuture.completedFuture(mockResponse));
-
-    // When
-    CompletableFuture<List<ElementEntity>> futureElements =
-        periodicTableRepository.findElements("1");
-
-    // Then
-    assertNotNull(futureElements,
-        "Future elements should not be null");
-
-    Exception exception = assertThrows(ExecutionException.class,
-        () -> {
-          futureElements.get();
-        });
-
-    assertTrue(exception.getCause() instanceof RuntimeException,
-        "Should throw a RuntimeException");
-    assertTrue(exception.getCause().getMessage().contains("Invalid group block"),
-        "Should contain error message about invalid group block");
-  }
-
-  @Test
   void testGetElementByAtomicNumber() throws ExecutionException, InterruptedException {
     // Given
     String jsonContent = """
@@ -392,7 +286,8 @@ class PeriodicTableRepositoryTest {
         .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
     // When
-    CompletableFuture<Optional<ElementEntity>> futureElement = periodicTableRepository.getElement(1);
+    CompletableFuture<Optional<ElementEntity>> futureElement =
+        periodicTableRepository.getElement(1);
 
     // Then
     assertNotNull(futureElement,
@@ -443,7 +338,8 @@ class PeriodicTableRepositoryTest {
         .thenReturn(CompletableFuture.completedFuture(mockResponse));
 
     // When
-    CompletableFuture<Optional<ElementEntity>> futureElement = periodicTableRepository.getElement(999);
+    CompletableFuture<Optional<ElementEntity>> futureElement =
+        periodicTableRepository.getElement(999);
 
     // Then
     assertNotNull(futureElement,

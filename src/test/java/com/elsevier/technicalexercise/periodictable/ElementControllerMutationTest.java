@@ -68,9 +68,9 @@ public class ElementControllerMutationTest {
         mockMvc.perform(patch("/elements")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsBytes(List.of(
-                    new PatchElementDto("Updated Hydrogen", 1, "H", "updated group 1, s-block"),
-                    new PatchElementDto("Updated Helium", 2, "He",
-                        "updated group 18 (noble gases), s-block")
+                    new ElementPatchRequestDto("Updated Hydrogen", 1, "H", "group 1, s-block"),
+                    new ElementPatchRequestDto("Updated Helium", 2, "He",
+                        "group 18 (noble gases), s-block")
                 ))))
             .andExpect(request().asyncStarted())
             .andReturn();
@@ -110,7 +110,7 @@ public class ElementControllerMutationTest {
         mockMvc.perform(patch("/elements")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsBytes(List.of(
-                    new PatchElementDto("Only Name Updated", 3, null, null)
+                    new ElementPatchRequestDto("Only Name Updated", 3, null, null)
                 ))))
             .andExpect(request().asyncStarted())
             .andReturn();
@@ -138,7 +138,7 @@ public class ElementControllerMutationTest {
         mockMvc.perform(patch("/elements")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsBytes(List.of(
-                    new PatchElementDto(null, 4, "Updated Be", null)
+                    new ElementPatchRequestDto(null, 4, "Updated Be", null)
                 ))))
             .andExpect(request().asyncStarted())
             .andReturn();
@@ -167,7 +167,7 @@ public class ElementControllerMutationTest {
         mockMvc.perform(patch("/elements")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsBytes(List.of(
-                    new PatchElementDto(null, 5, null, "Updated group block")
+                    new ElementPatchRequestDto(null, 5, null, "group n/a, f-block")
                 ))))
             .andExpect(request().asyncStarted())
             .andReturn();
@@ -191,19 +191,17 @@ public class ElementControllerMutationTest {
   @Test
   public void testPatchNonExistentElement() throws Exception {
     // When - try to update an element with atomic number that doesn't exist
-    MvcResult mvcPatchResult =
         mockMvc.perform(patch("/elements")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsBytes(List.of(
-                    new PatchElementDto("Non-existent Element", 999, "XX", "non-existent group")
+                    new ElementPatchRequestDto("Non-existent Element", 999, "XX", "non-existent group")
                 ))))
-            .andExpect(request().asyncStarted())
-            .andReturn();
+            .andExpect(status().isBadRequest())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.error.code").value(400))
+            .andExpect(jsonPath("$.error.reason").value("HandlerMethodValidationException"))
+            .andExpect(jsonPath("$.error.message").exists());
 
-    // Then - should still return 204 No Content as the operation is idempotent
-    mockMvc.perform(asyncDispatch(mvcPatchResult))
-        .andExpect(status().isNoContent())
-        .andExpect(header().exists("ETag"));
   }
 
   @Test
@@ -225,7 +223,7 @@ public class ElementControllerMutationTest {
     mockMvc.perform(patch("/elements")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsBytes(List.of(
-                    new PatchElementDto(null, 1, null, null)
+                    new ElementPatchRequestDto(null, 1, null, null)
                 ))))
             .andExpect(status().isBadRequest())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))

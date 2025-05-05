@@ -56,10 +56,10 @@ public class ElementControllerTest {
   }
 
   @Test
-  public void testFilterByGroupBlock() throws Exception {
+  public void testFilterByGroupNA() throws Exception {
     // When
     MvcResult mvcResult = mockMvc.perform(get("/elements")
-            .param("group", "s-block")
+            .param("group", "n/a")
             .accept(MediaType.APPLICATION_JSON))
         .andExpect(request().asyncStarted())
         .andReturn();
@@ -70,25 +70,18 @@ public class ElementControllerTest {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.data.items").isArray())
         // s-block should have fewer elements than the total
-        .andExpect(jsonPath("$.data.items.length()").value(14));
+        .andExpect(jsonPath("$.data.items.length()").value(30));
   }
 
   @Test
   public void testFilterByNonExistentGroup() throws Exception {
-    // When
-    MvcResult mvcResult = mockMvc.perform(get("/elements")
+    mockMvc.perform(get("/elements")
             .param("group", "non-existent-group")
             .accept(MediaType.APPLICATION_JSON))
-        .andExpect(request().asyncStarted())
-        .andReturn();
+        .andExpect(jsonPath("$.error.code").value(400))
+        .andExpect(jsonPath("$.error.reason").value("MethodArgumentNotValidException"))
+        .andExpect(jsonPath("$.error.message").exists());
 
-    // Then
-    mockMvc.perform(asyncDispatch(mvcResult))
-        .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.data.items").isArray())
-        // Non-existent group should return empty array
-        .andExpect(jsonPath("$.data.items.length()").value(0));
   }
 
   @Test

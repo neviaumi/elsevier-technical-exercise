@@ -28,6 +28,7 @@ public class GlobalExceptionControllerHandler {
    * @return ResponseEntity containing the error response
    */
   @ExceptionHandler(ErrorResponseException.class)
+  @ResponseBody
   public ResponseEntity<ErrorResponseDto> handleErrorResponseException(ErrorResponseException ex) {
     return new ResponseEntity<>(ErrorResponseDto.fromException(
         HttpStatus.valueOf(ex.getStatusCode().value()),
@@ -61,7 +62,7 @@ public class GlobalExceptionControllerHandler {
   /**
    * Handles exceptions for malformed HTTP message bodies.
    *
-   * @param ex The HttpMessageNotReadableException to handle
+   * @param ex      The HttpMessageNotReadableException to handle
    * @param request The current web request
    * @return ErrorResponseDto with information about the malformed request
    */
@@ -83,7 +84,7 @@ public class GlobalExceptionControllerHandler {
   /**
    * Handles exceptions for method argument type mismatches.
    *
-   * @param ex The MethodArgumentTypeMismatchException to handle
+   * @param ex      The MethodArgumentTypeMismatchException to handle
    * @param request The current web request
    * @return ErrorResponseDto with information about the type mismatch
    */
@@ -132,7 +133,7 @@ public class GlobalExceptionControllerHandler {
   /**
    * Handles exceptions for resources not found.
    *
-   * @param ex The NoResourceFoundException to handle
+   * @param ex      The NoResourceFoundException to handle
    * @param request The current web request
    * @return ErrorResponseDto with information about the not found resource
    */
