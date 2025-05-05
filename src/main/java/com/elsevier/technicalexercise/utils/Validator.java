@@ -14,4 +14,14 @@ public class Validator {
     return value != null && !value.trim().isEmpty();
   }
 
+  /**
+   * Checks if a string is null or blank (contains only whitespace characters or is empty).
+   *
+   * @param value The string to check
+   * @return true if the string is null or contains only whitespace characters
+   */
+  public static boolean isNullOrBlank(String value) {
+    return !Validator.isNotNullOrBlank(value);
+  }
+
 }

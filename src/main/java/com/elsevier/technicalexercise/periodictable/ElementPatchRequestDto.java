@@ -1,5 +1,7 @@
 package com.elsevier.technicalexercise.periodictable;
 
+import com.elsevier.technicalexercise.utils.Validator;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
@@ -7,7 +9,7 @@ import jakarta.validation.constraints.Positive;
  * Data Transfer Object for PATCH operations on periodic table elements.
  * Contains the fields that can be updated for an element.
  */
-public class PatchElementDto {
+public class ElementPatchRequestDto {
 
   private String name;
 
@@ -17,24 +19,25 @@ public class PatchElementDto {
 
   private String alternativeName;
 
+  @ValidGroupBlock
   private String groupBlock;
 
   /**
    * No-argument constructor for frameworks.
    */
-  public PatchElementDto() {
+  public ElementPatchRequestDto() {
   }
 
   /**
    * All-arguments constructor for convenience (e.g., tests).
    *
-   * @param name The name of the element
-   * @param atomicNumber The atomic number of the element
+   * @param name            The name of the element
+   * @param atomicNumber    The atomic number of the element
    * @param alternativeName The alternative name of the element
-   * @param groupBlock The group block of the element
+   * @param groupBlock      The group block of the element
    */
-  public PatchElementDto(String name, Integer atomicNumber, String alternativeName,
-                         String groupBlock) {
+  public ElementPatchRequestDto(String name, Integer atomicNumber, String alternativeName,
+                                String groupBlock) {
     this.name = name;
     this.atomicNumber = atomicNumber;
     this.alternativeName = alternativeName;
@@ -73,5 +76,12 @@ public class PatchElementDto {
 
   public void setGroupBlock(String groupBlock) {
     this.groupBlock = groupBlock;
+  }
+
+  @Schema(hidden = true)
+  public boolean isEmpty() {
+    return Validator.isNullOrBlank(this.name)
+        && Validator.isNullOrBlank(this.alternativeName)
+        && Validator.isNullOrBlank(this.groupBlock);
   }
 }

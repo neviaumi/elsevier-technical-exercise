@@ -31,23 +31,12 @@ class PeriodicTableService {
     this.periodicTableRepository = periodicTableRepository;
   }
 
-  /**
-   * Finds all elements in the periodic table.
-   *
-   * @return a future that will complete with the list of elements
-   */
-  public CompletableFuture<List<ElementEntity>> findElements() {
-    return periodicTableRepository.findElements();
-  }
-
-  /**
-   * Finds elements by group.
-   *
-   * @param group the group to filter by
-   * @return a future that will complete with the filtered list of elements
-   */
-  public CompletableFuture<List<ElementEntity>> findElements(String group) {
-    return periodicTableRepository.findElements(group);
+  public CompletableFuture<List<ElementEntity>> findElements(
+      ElementListingRequestDto elementListingRequestDto) {
+    if (elementListingRequestDto.getGroup() == null) {
+      return periodicTableRepository.findElements();
+    }
+    return periodicTableRepository.findElements(elementListingRequestDto.getGroup());
   }
 
   /**
@@ -65,12 +54,12 @@ class PeriodicTableService {
   }
 
   public CompletableFuture<PeriodicTableEntity> updatePeriodicTable(
-      List<PatchElementDto> patchElements) {
+      List<ElementPatchRequestDto> patchElements) {
     return periodicTableRepository.getPeriodicTable()
         .thenApply(
             periodicTableEntity -> new PeriodicTableEntity(
                 periodicTableEntity.data().stream().map(existingElement -> {
-                  PatchElementDto newElementHaveToUpdate =
+                  ElementPatchRequestDto newElementHaveToUpdate =
                       patchElements.stream().filter(newElement -> {
                         return newElement.getAtomicNumber()
                             ==
