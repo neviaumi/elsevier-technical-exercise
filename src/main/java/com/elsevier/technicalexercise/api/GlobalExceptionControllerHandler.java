@@ -49,7 +49,7 @@ public class GlobalExceptionControllerHandler {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
   public ErrorResponseDto handleHandlerMethodValidationException(HandlerMethodValidationException
-                                                         ex) {
+                                                                     ex) {
     return ErrorResponseDto.fromErrors(HttpStatus.BAD_REQUEST,
         HandlerMethodValidationException.class.getSimpleName(),
         "Validation failed for the input fields. Please check the data format and try again.",
@@ -57,13 +57,17 @@ public class GlobalExceptionControllerHandler {
             .map(error -> {
               if (error instanceof FieldError fieldError) {
                 return new ErrorResponseDto.Error(
+                    fieldError.getClass().getSimpleName(),
+                    fieldError.getDefaultMessage(),
                     fieldError.getField(),
-                    fieldError.getDefaultMessage()
-              );
+                    "field"
+                );
               }
               return new ErrorResponseDto.Error(
                   error.getClass().getSimpleName(),
-                  error.getDefaultMessage()
+                  error.getDefaultMessage(),
+                  null,
+                  null
               );
             })
             .toList());
@@ -85,8 +89,11 @@ public class GlobalExceptionControllerHandler {
         "Validation failed for the input fields. Please check the data format and try again.",
         ex.getBindingResult().getFieldErrors().stream()
             .map(error -> new ErrorResponseDto.Error(
-                error.getField(),
-                error.getDefaultMessage())
+                    error.getClass().getSimpleName(),
+                    error.getDefaultMessage(),
+                    error.getField(),
+                    "field"
+                )
             )
             .toList());
   }
@@ -110,7 +117,7 @@ public class GlobalExceptionControllerHandler {
     return ErrorResponseDto.fromErrors(
         HttpStatus.BAD_REQUEST,
         message,
-        List.of(new ErrorResponseDto.Error(ex.getClass().getSimpleName(), message))
+        List.of(new ErrorResponseDto.Error(ex.getClass().getSimpleName(), message, null, null))
     );
   }
 
@@ -138,7 +145,7 @@ public class GlobalExceptionControllerHandler {
     return ErrorResponseDto.fromErrors(
         HttpStatus.BAD_REQUEST,
         message,
-        List.of(new ErrorResponseDto.Error(ex.getClass().getSimpleName(), message))
+        List.of(new ErrorResponseDto.Error(ex.getClass().getSimpleName(), message, null, null))
     );
   }
 

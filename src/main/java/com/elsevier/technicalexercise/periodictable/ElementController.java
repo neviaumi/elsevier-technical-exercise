@@ -2,10 +2,12 @@ package com.elsevier.technicalexercise.periodictable;
 
 import com.elsevier.technicalexercise.api.ErrorResponseDto;
 import com.elsevier.technicalexercise.api.SuccessResponseDto;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +46,7 @@ class ElementController {
   @GetMapping("/elements")
   @ResponseBody
   public CompletableFuture<SuccessResponseDto<SuccessResponseDto.Items<ElementDto>>> findElements(
+      @ParameterObject
       @Valid @ModelAttribute
       ElementListingRequestDto elementListingRequestDto) {
 
